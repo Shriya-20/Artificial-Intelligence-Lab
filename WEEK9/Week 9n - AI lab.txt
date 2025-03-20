@@ -1,0 +1,82 @@
+import numpy as np
+import gymnasium as gym
+import matplotlib.pyplot as plt
+
+# Create CliffWalking environment
+env = gym.make("CliffWalking-v0")
+
+# Initialize parameters
+num_states = env.observation_space.n  # 48 states
+num_actions = env.action_space.n      # 4 actions
+gamma = 1.0    # Discount factor
+epsilon = 0.1  # Exploration probability
+num_episodes = 500
+
+# Function to generate an episode using epsilon-greedy policy
+def generate_episode(policy):
+    episode = []
+    state, _ = env.reset()
+    
+    while True:
+        if np.random.rand() < epsilon:
+            action = np.random.choice(num_actions)  # Explore
+        else:
+            action = policy[state]  # Exploit
+            
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        episode.append((state, action, reward))
+        
+        if terminated or truncated:
+            break
+            
+        state = next_state
+    return episode
+
+# Monte Carlo function (First-Visit or Every-Visit)
+def monte_carlo(method="first_visit"):
+    Q = np.zeros((num_states, num_actions))  # Q-table
+    returns = {s: {a: [] for a in range(num_actions)} for s in range(num_states)}
+    
+    for _ in range(num_episodes):
+        episode = generate_episode(np.argmax(Q, axis=1))  # Use current policy
+        G = 0
+        visited = set()
+        
+        for t in reversed(range(len(episode))):
+            state, action, reward = episode[t]
+            G = gamma * G + reward  # Compute return
+            
+            if method == "first_visit" and (state, action) in visited:
+                continue  # Skip if already seen
+            
+            returns[state][action].append(G)
+            Q[state][action] = np.mean(returns[state][action])  # Update Q-table
+            
+            visited.add((state, action))
+    
+    policy = np.argmax(Q, axis=1)  # Optimal policy
+    return policy
+
+# Run both methods
+policy_first_visit = monte_carlo(method="first_visit")
+policy_every_visit = monte_carlo(method="every_visit")
+
+# Function to plot policy
+def plot_policy(policy, title):
+    grid = np.array(policy).reshape(4, 12)
+    actions = {0: "↑", 1: "→", 2: "↓", 3: "←"}
+    plt.figure(figsize=(8, 3))
+    
+    for i in range(4):
+        for j in range(12):
+            plt.text(j, 3 - i, actions[grid[i, j]], ha="center", va="center", fontsize=12)
+    
+    plt.xticks(range(12))
+    plt.yticks(range(4))
+    plt.gca().invert_yaxis()
+    plt.title(title)
+    plt.show()
+
+# Plot both policies
+plot_policy(policy_first_visit, "First-Visit Monte Carlo Policy")
+plot_policy(policy_every_visit, "Every-Visit Monte Carlo Policy")
