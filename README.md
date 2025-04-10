@@ -1,8 +1,6 @@
 # Artificial Intelligence Lab 
 
 
----
-
 ### Week 1: 
 - CartPole and MountainCar environments
 
@@ -33,8 +31,6 @@
 
 ### Week 9: Cliff Walking – Monte Carlo Methods
 - MC First-Visit and Every-Visit on CliffWalking-v0.
-
-📄 *Reference:* `Cliff Walking - Gymnasium Documentation.pdf`
 
 ### Week 10: Cliff Walking – Monte Carlo Control
 - MC Exploring Starts and On-policy MC Control with ε=0.1.
